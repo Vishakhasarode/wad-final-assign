@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students - College Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            width: 250px;
+            background: #343a40;
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100%;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+        }
+        .sidebar a:hover {
+            background: #495057;
+        }
+        .content {
+            margin-left: 260px;
+            padding: 20px;
+            flex-grow: 1;
+        }
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>College Admin</h2>
+        <a href="home.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="student.html">Students</a>
+        <a href="faculty.html">Faculty</a>
+        <a href="courses.html">Courses</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="reports.html">Reports</a>
+        <a href="fees.html">Fees</a>
+        <a href="library.html">Library</a>
+        <a href="settings.html">Settings</a>
+        <a href="logout.html">Logout</a>
+    </div>
+    <div class="content">
+        <h2>Student Records</h2>
+
+        <!-- Student Registration Form -->
+        <div class="mb-3">
+            <h4>Add Student</h4>
+            <form id="studentForm">
+                <div class="row">
+                    <div class="col-md-3">
+                        <input type="text" id="studentID" class="form-control" placeholder="Student ID" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" id="studentName" class="form-control" placeholder="Name" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" id="studentCourse" class="form-control" placeholder="Course" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" id="studentYear" class="form-control" placeholder="Year" required>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-success">Add</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Student Records Table -->
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Course</th>
+                        <th>Year</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTable">
+                    <!-- Students will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            loadStudents(); // Load students from local storage on page load
+
+            document.getElementById("studentForm").addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                let studentID = document.getElementById("studentID").value;
+                let studentName = document.getElementById("studentName").value;
+                let studentCourse = document.getElementById("studentCourse").value;
+                let studentYear = document.getElementById("studentYear").value;
+
+                if (studentID && studentName && studentCourse && studentYear) {
+                    let newStudent = { id: studentID, name: studentName, course: studentCourse, year: studentYear };
+
+                    // Send Data Using AJAX (Simulated)
+                    fetch("https://jsonplaceholder.typicode.com/posts", {
+                        method: "POST",
+                        body: JSON.stringify(newStudent),
+                        headers: { "Content-Type": "application/json" }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        saveStudent(newStudent);
+                        displayStudent(newStudent);
+                        document.getElementById("studentForm").reset();
+                    })
+                    .catch(error => console.error("Error:", error));
+                }
+            });
+        });
+
+        // Save student to local storage
+        function saveStudent(student) {
+            let students = JSON.parse(localStorage.getItem("students")) || [];
+            students.push(student);
+            localStorage.setItem("students", JSON.stringify(students));
+        }
+
+        // Load students from local storage and display them
+        function loadStudents() {
+            let students = JSON.parse(localStorage.getItem("students")) || [];
+            students.forEach(displayStudent);
+        }
+
+        // Display student in the table
+        function displayStudent(student) {
+            let table = document.getElementById("studentTable");
+            let row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${student.id}</td>
+                <td>${student.name}</td>
+                <td>${student.course}</td>
+                <td>${student.year}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="editStudent('${student.id}')">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteStudent('${student.id}')">Delete</button>
+                </td>
+            `;
+            table.appendChild(row);
+        }
+
+        // Delete student from local storage and table
+        function deleteStudent(id) {
+            let students = JSON.parse(localStorage.getItem("students")) || [];
+            students = students.filter(student => student.id !== id);
+            localStorage.setItem("students", JSON.stringify(students));
+
+            document.getElementById("studentTable").innerHTML = ""; // Clear table
+            loadStudents(); // Reload table
+        }
+
+        // Edit student (Basic functionality)
+        function editStudent(id) {
+            let students = JSON.parse(localStorage.getItem("students")) || [];
+            let student = students.find(s => s.id === id);
+
+            if (student) {
+                document.getElementById("studentID").value = student.id;
+                document.getElementById("studentName").value = student.name;
+                document.getElementById("studentCourse").value = student.course;
+                document.getElementById("studentYear").value = student.year;
+
+                deleteStudent(id); // Remove old entry before adding new one
+            }
+        }
+    </script>
+</body>
+</html>
